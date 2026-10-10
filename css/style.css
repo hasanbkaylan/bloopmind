@@ -205,12 +205,13 @@ textarea.in { resize: vertical; min-height: 78px; max-height: 200px; }
 
 /* ---- Toast ---- */
 .toast {
-  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40;
+  position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 40;
   max-width: calc(100% - 32px); display: flex; align-items: center; gap: 14px;
   background: var(--btn-bg); color: var(--btn-fg); border-radius: 14px; padding: 10px 10px 10px 16px;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3); font-weight: 600; font-size: 14px;
-  animation: rise .25s ease;
+  animation: toast-in .25s ease;
 }
+@keyframes toast-in { from { transform: translateX(-50%) translateY(-24px); opacity: 0; } }
 .toast span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .toast button { background: transparent; border: 1px solid color-mix(in srgb, var(--btn-fg) 40%, transparent); color: var(--btn-fg); border-radius: 10px; min-height: 34px; padding: 0 12px; font-weight: 700; flex: none; }
 
@@ -261,3 +262,9 @@ textarea.in { resize: vertical; min-height: 78px; max-height: 200px; }
 .facts a:hover { color: var(--ring); }
 .about .fine { font-size: 12.5px; margin: 0 0 6px; }
 @media (max-width: 420px) { .facts > div { grid-template-columns: 92px 1fr; } }
+
+
+/* ---- No text / image selection (except editable fields) ---- */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+img, svg, canvas, a { -webkit-user-drag: none; user-drag: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
