@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BloopMind</title>
+<meta name="description" content="BloopMind turns your reminders into physics-driven bubbles that grow as they age. Free and open source (GPL-3.0).">
+<meta name="theme-color" content="#eef1f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1120" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>BloopMind</h1>
+      <div class="meta">
+        <span id="count"></span>
+        <span class="meter" id="meter" aria-hidden="true"><i></i></span>
+        <span class="pct" id="pct"></span>
+        <button class="linkbtn" id="clearEx" type="button" data-i18n="clearEx" hidden></button>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="iconbtn" id="setBtn" type="button" data-i18n-aria="settings" data-i18n-title="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button class="btn primary" id="addBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span data-i18n="add"></span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="boxbar" id="boxbar" role="tablist" data-i18n-aria="boxes" hidden></nav>
+
+  <main class="stage" id="stage">
+    <canvas id="cv" aria-hidden="true"></canvas>
+    <div class="empty" id="empty" hidden><b data-i18n="empty.title"></b><span data-i18n="empty.text"></span></div>
+    <div class="hint" data-i18n="hint"></div>
+  </main>
+</div>
+
+<!-- Screen-reader list of reminders (the canvas itself is not accessible) -->
+<ul class="sr" id="srList" data-i18n-aria="srlist"></ul>
+
+<!-- Reminder sheet: create / edit -->
+<div class="scrim" id="scrim" hidden>
+  <form class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" novalidate>
+    <div class="sh-head">
+      <div class="sh-badge" id="shBadge"></div>
+      <h2 id="shTitle"></h2>
+      <button class="iconbtn" id="shClose" type="button" data-i18n-aria="close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="field">
+      <label for="fTitle" data-i18n="f.title"></label>
+      <input class="in" id="fTitle" maxlength="60" autocomplete="off" data-i18n-ph="f.title.ph">
+      <div class="err" id="fErr" role="alert"></div>
+    </div>
+    <div class="field">
+      <label for="fNote" data-i18n="f.note"></label>
+      <textarea class="in" id="fNote" maxlength="400" data-i18n-ph="f.note.ph"></textarea>
+    </div>
+    <div class="field">
+      <span class="lbl" id="icLbl" data-i18n="f.icon"></span>
+      <div class="icons" id="icons" role="radiogroup" aria-labelledby="icLbl"></div>
+    </div>
+    <div class="field">
+      <label for="fDate"><span data-i18n="f.date"></span> <span class="opt" data-i18n="f.optional"></span></label>
+      <input class="in" id="fDate" type="date">
+      <div class="info" id="dueInfo" hidden></div>
+    </div>
+    <div class="info" id="ageInfo" hidden></div>
+    <div class="notice" id="fullNote" data-i18n="full.notice" hidden></div>
+    <div class="foot">
+      <button class="btn danger" id="shPop" type="button" data-i18n="pop" hidden></button>
+      <div class="right">
+        <button class="btn ghost" id="shCancel" type="button"></button>
+        <button class="btn primary" id="shSave" type="submit"></button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Settings: sound, language, project details -->
+<div class="scrim" id="setScrim" hidden>
+  <div class="sheet settings" id="setSheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <div class="sh-head">
+      <h2 id="setTitle" data-i18n="settings"></h2>
+      <button class="iconbtn" id="setClose" type="button" data-i18n-aria="close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <section class="set-sec">
+      <h3 data-i18n="set.sound"></h3>
+      <div class="row" id="sndRow">
+        <div class="row-text">
+          <span class="row-title" id="sndLbl" data-i18n="set.sound.label"></span>
+          <span class="row-desc" id="sndDesc" data-i18n="set.sound.desc"></span>
+        </div>
+        <button class="switch" id="sndSwitch" type="button" role="switch" aria-checked="true" aria-labelledby="sndLbl" aria-describedby="sndDesc"><i></i></button>
+      </div>
+    </section>
+
+    <section class="set-sec">
+      <h3 data-i18n="set.lang"></h3>
+      <div class="seg" id="langSeg" role="radiogroup" data-i18n-aria="set.lang.aria"></div>
+    </section>
+
+    <section class="set-sec about">
+      <h3 data-i18n="set.about"></h3>
+      <div class="about-head">
+        <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+          <defs><radialGradient id="logoGrad" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#a9bfff"/><stop offset=".55" stop-color="#3d6bff"/><stop offset="1" stop-color="#1f3fb8"/></radialGradient></defs>
+          <circle cx="24" cy="24" r="22" fill="url(#logoGrad)"/>
+          <ellipse cx="17" cy="14" rx="7" ry="3.6" transform="rotate(-35 17 14)" fill="#fff" opacity=".6"/>
+        </svg>
+        <div><b>BloopMind</b><span>v<span id="appVer"></span></span></div>
+      </div>
+      <p data-i18n="about.desc"></p>
+      <dl class="facts">
+        <div><dt data-i18n="about.author"></dt><dd>Hasan Berat Kaylan</dd></div>
+        <div><dt data-i18n="about.license"></dt><dd><a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer">GPL-3.0</a></dd></div>
+        <div><dt data-i18n="about.source"></dt><dd><a href="https://github.com/hasanbkaylan/bloopmind" target="_blank" rel="noopener noreferrer">github.com/hasanbkaylan/bloopmind</a></dd></div>
+      </dl>
+      <p class="fine" data-i18n="about.notice"></p>
+      <p class="fine" data-i18n="about.data"></p>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/physics.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/locales/tr.js"></script>
+<script src="js/locales/en.js"></script>
+<script src="js/locales/de.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
