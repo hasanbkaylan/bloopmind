@@ -862,6 +862,14 @@ document.addEventListener('keydown', e => {
   else if (sheetOpen()) { e.preventDefault(); closeSheet(); }
 });
 
+/* ---------- Disable text / image selection and dragging (editable fields excepted) ---------- */
+document.addEventListener('selectstart', e => {
+  const el = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+  if (el && el.closest('input, textarea')) return;
+  e.preventDefault();
+});
+document.addEventListener('dragstart', e => e.preventDefault());
+
 /* ================= Boot ================= */
 function boot() {
   I18n.init();
